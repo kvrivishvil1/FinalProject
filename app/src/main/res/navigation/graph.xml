@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/graph"
+    app:startDestination="@id/historyFragment">
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.example.finalproject.ui.history.HistoryFragment"
+        android:label="history_fragment"
+        tools:layout="@layout/history_fragment" >
+        <action
+            android:id="@+id/action_historyFragment_to_messageFragment"
+            app:destination="@id/messageFragment" />
+        <action
+            android:id="@+id/action_historyFragment_to_findUserFragment"
+            app:destination="@id/findUserFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/messageFragment"
+        android:name="com.example.finalproject.ui.messages.MessageFragment"
+        android:label="history_fragment"
+        tools:layout="@layout/history_fragment" >
+        <action
+            android:id="@+id/action_messageFragment_to_historyFragment"
+            app:destination="@id/historyFragment" />
+        <action
+            android:id="@+id/action_messageFragment_to_findUserFragment"
+            app:destination="@id/findUserFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/findUserFragment"
+        android:name="com.example.finalproject.ui.usersearch.FindUserFragment"
+        android:label="FindUserFragment" >
+        <action
+            android:id="@+id/action_findUserFragment_to_historyFragment"
+            app:destination="@id/historyFragment" />
+        <action
+            android:id="@+id/action_findUserFragment_to_messageFragment"
+            app:destination="@id/messageFragment" />
+    </fragment>
+
+</navigation>
