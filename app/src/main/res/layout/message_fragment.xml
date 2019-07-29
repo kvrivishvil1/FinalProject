@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".ui.history.HistoryFragment">
 
+    <ImageView
+        android:id="@+id/message_send"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginEnd="8dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/plane"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/message_recycle_view"
         android:layout_width="0dp"
@@ -32,22 +43,10 @@
         android:id="@+id/message_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
         android:hint=""
         android:maxLines="1"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/message_send"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/message_send"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:text="Send"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/message_input" />
 
     <ProgressBar
         android:id="@+id/progress_bar"

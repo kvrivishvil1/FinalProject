@@ -53,7 +53,7 @@ public class HistoryRecycleViewAdapter extends RecyclerView.Adapter<RecyclerView
                             view.getContext());
                     alertDialogBuilder
                             .setCancelable(false)
-                            .setMessage("გსურთ " + items.get(position/2).getName() + "თან მიმოწერის წაშლა?")
+                            .setMessage("გსურთ " + items.get(position/2).getName() + "-თან მიმოწერის წაშლა?")
                             .setPositiveButton("კი",
                                     new DialogInterface.OnClickListener() {
                                         @Override
@@ -68,11 +68,7 @@ public class HistoryRecycleViewAdapter extends RecyclerView.Adapter<RecyclerView
                                             dialogInterface.cancel();
                                         }
                                     });
-
-                    // create alert dialog
                     AlertDialog alertDialog = alertDialogBuilder.create();
-
-                    // show it
                     alertDialog.show();
                     return true;
                 }

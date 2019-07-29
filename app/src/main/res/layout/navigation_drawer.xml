@@ -23,15 +23,31 @@
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
-            <TextView
-                android:id="@+id/toolbar_title"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="ისტორია"
-                android:textColor="#FFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/toolbar_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Main"
+                    android:textColor="#FFFF"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/toolbar_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Date"
+                    android:textColor="#ffff"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/delete_button"
@@ -39,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:layout_marginEnd="16dp"
-                android:visibility="gone"
+                android:visibility="visible"
                 app:srcCompat="@android:drawable/ic_menu_delete" />
         </androidx.appcompat.widget.Toolbar>
 

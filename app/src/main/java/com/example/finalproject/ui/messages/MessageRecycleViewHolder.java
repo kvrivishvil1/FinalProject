@@ -27,7 +27,7 @@ public class MessageRecycleViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void setDate(Date date) {
-        this.date.setText(Helper.formatDate(date, "dd/MM/yyyy - HH:mm:ss"));
+        this.date.setText(Helper.formatDate(date, "HH:mm:ss"));
     }
 
     public void showOrHideDate() {

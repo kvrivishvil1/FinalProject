@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,13 +18,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.finalproject.Helper;
 import com.example.finalproject.R;
+import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.example.finalproject.ui.models.MessageModel;
 import com.google.android.material.navigation.NavigationView;
@@ -40,7 +44,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     private boolean hideInput;
 
     private EditText messageText;
-    private Button sendButton;
+    private ImageView sendButton;
     private ProgressBar progressBar;
 
     public MessageFragment() {
@@ -62,6 +66,10 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         int width = displayMetrics.widthPixels - (int) (displayMetrics.widthPixels * 0.2);
 
         getActivity().findViewById(R.id.toolbar).setVisibility(View.VISIBLE);
+
+        ((MainActivity)getActivity()).disableToggle();
+
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Bundle bundle = getArguments();
         if(bundle == null) {
@@ -95,11 +103,10 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             public void onClick(View view) {
 
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                        view.getContext());
+                        getActivity());
                 alertDialogBuilder
                         .setCancelable(false)
-                        .setMessage("გსურთ " + model.getName() + "თან მიმოწერის წაშლა?")
-//                        .set
+                        .setMessage("გსურთ " + model.getName() + "-თან მიმოწერის წაშლა?")
                         .setPositiveButton("კი",
                                 new DialogInterface.OnClickListener() {
                                     @Override
@@ -115,9 +122,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
                                         dialogInterface.cancel();
                                     }
                                 });
-
                 AlertDialog alertDialog = alertDialogBuilder.create();
-
                 alertDialog.show();
             }
         });
@@ -126,6 +131,8 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         this.presenter = new MessagePresenter(this);
         this.presenter.loadMessages(model.getId());
         ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText(model.getName());
+        getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.VISIBLE);
+        ((TextView) getActivity().findViewById(R.id.toolbar_subtitle)).setText(Helper.formatDate(model.getLastMessageDate(), "dd/MM/yyyy - HH:mm:ss"));
 
         NavigationView navigation = getActivity().findViewById(R.id.navigation);
         int size = navigation.getMenu().size();
@@ -133,6 +140,8 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             navigation.getMenu().getItem(i).setChecked(false);
         }
     }
+
+
 
     @Override
     public void showProgressBar() {

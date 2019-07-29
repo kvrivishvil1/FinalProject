@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalproject.R;
+import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.google.android.material.navigation.NavigationView;
 
@@ -47,6 +50,12 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
 
         getActivity().findViewById(R.id.toolbar).setVisibility(View.GONE);
 
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        ((MainActivity)getActivity()).enableToggle();
+
+        TextView title = getActivity().findViewById(R.id.toolbar_title);
+        title.setText("");
+
         searchLayout = view.findViewById(R.id.user_search_layout);
 
         view.findViewById(R.id.cancel_search).setOnClickListener(new View.OnClickListener() {
@@ -66,6 +75,9 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
 
         ImageView deleteButton = getActivity().findViewById(R.id.delete_button);
         deleteButton.setVisibility(View.GONE);
+
+        getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.GONE);
+        ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText("მომხმარებლები");
 
         this.presenter = new UserSearchPresenter(this);
         this.presenter.searchUsers();

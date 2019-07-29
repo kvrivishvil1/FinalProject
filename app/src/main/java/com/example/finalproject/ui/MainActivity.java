@@ -1,9 +1,9 @@
 package com.example.finalproject.ui;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-//import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     DrawerLayout drawer;
     NavigationView navigation;
     Toolbar toolbar;
+    ActionBarDrawerToggle toggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +34,18 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.toggle_close, R.string.toggle_open);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("cek", "home selected");
+            }
+        });
+
+        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.toggle_close, R.string.toggle_open);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+//        toggle.setDrawerIndicatorEnabled(false);
+
         navigation = findViewById(R.id.navigation);
         final AppCompatActivity activity = this;
 
@@ -69,6 +79,34 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NavController navController = Navigation.findNavController(activity, R.id.main_fragment);
+                int openFragmentId = navController.getCurrentDestination().getId();
+                if(openFragmentId == R.id.messageFragment ) {
+                    onBackPressed();
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+
+//                NavController navController = Navigation.findNavController(getActivity(), R.id.main_fragment);
+//                navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
+            }
+        });
+    }
+
+    public Toolbar getToolbar() {
+        return toolbar;
+    }
+
+    public void disableToggle() {
+        toggle.setDrawerIndicatorEnabled(false);
+    }
+
+    public void enableToggle() {
+        toggle.setDrawerIndicatorEnabled(true);
     }
 
     @Override

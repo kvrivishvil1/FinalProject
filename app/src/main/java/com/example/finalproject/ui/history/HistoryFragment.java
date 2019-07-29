@@ -2,6 +2,7 @@ package com.example.finalproject.ui.history;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -20,6 +21,7 @@ import android.widget.Button;
 
 
 import com.example.finalproject.R;
+import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.google.android.material.navigation.NavigationView;
 
@@ -55,6 +57,9 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         historyStatus = view.findViewById(R.id.history_search_status);
         progressBar = view.findViewById(R.id.progress_bar);
 
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        ((MainActivity)getActivity()).enableToggle();
+
         this.clearHistoryBtn = view.findViewById(R.id.clear_history_button);
         this.clearHistoryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,6 +75,10 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         RecyclerView recyclerView = view.findViewById(R.id.history_recycle_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+
+        getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.GONE);
+        ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText("ისტორია");
+
         this.adapter = new HistoryRecycleViewAdapter(this);
         recyclerView.setAdapter(adapter);
 
@@ -77,6 +86,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         this.presenter.loadHistory();
 
     }
+
 
     @Override
     public Context getContext() {
