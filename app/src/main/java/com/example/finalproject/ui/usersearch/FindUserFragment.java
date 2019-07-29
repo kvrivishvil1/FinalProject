@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,8 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalproject.R;
-import com.example.finalproject.ui.messages.MessagePresenter;
-import com.example.finalproject.ui.messages.MessageRecycleViewAdapter;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.google.android.material.navigation.NavigationView;
 
@@ -64,6 +64,8 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         this.adapter = new UserSearchRecycleViewAdapter(this);
         recyclerView.setAdapter(adapter);
 
+        ImageView deleteButton = getActivity().findViewById(R.id.delete_button);
+        deleteButton.setVisibility(View.GONE);
 
         this.presenter = new UserSearchPresenter(this);
         this.presenter.searchUsers();
@@ -71,6 +73,7 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
 
     @Override
     public void showData(List<HistoryModel> list) {
+        getActivity().findViewById(R.id.toolbar).setVisibility(View.VISIBLE);
         adapter.setItems(list);
     }
 

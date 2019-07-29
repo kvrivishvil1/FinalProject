@@ -1,5 +1,7 @@
 package com.example.finalproject.ui.messages;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -8,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -86,6 +89,39 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         this.adapter = new MessageRecycleViewAdapter(this, width);
         recyclerView.setAdapter(adapter);
 
+        ImageView deleteButton = getActivity().findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                        view.getContext());
+                alertDialogBuilder
+                        .setCancelable(false)
+                        .setMessage("გსურთ " + model.getName() + "თან მიმოწერის წაშლა?")
+//                        .set
+                        .setPositiveButton("კი",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        presenter.deleteHistory(model.getId());
+                                        NavController navController = Navigation.findNavController(getActivity(), R.id.main_fragment);
+                                        navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
+                                    }
+                                })
+                        .setNegativeButton("არა",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialogInterface,int id) {
+                                        dialogInterface.cancel();
+                                    }
+                                });
+
+                AlertDialog alertDialog = alertDialogBuilder.create();
+
+                alertDialog.show();
+            }
+        });
+        deleteButton.setVisibility(View.VISIBLE);
 
         this.presenter = new MessagePresenter(this);
         this.presenter.loadMessages(model.getId());

@@ -12,6 +12,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.view.ViewGroup;
@@ -62,6 +63,9 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
                 showData(new ArrayList<HistoryModel>());
             }
         });
+
+        ImageView deleteButton = getActivity().findViewById(R.id.delete_button);
+        deleteButton.setVisibility(View.GONE);
 
         RecyclerView recyclerView = view.findViewById(R.id.history_recycle_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

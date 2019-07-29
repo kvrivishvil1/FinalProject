@@ -15,6 +15,7 @@ public interface MessageContract {
 
     interface Presenter {
         void loadMessages(long userId);
+        void deleteHistory(long id);
     }
 
 }

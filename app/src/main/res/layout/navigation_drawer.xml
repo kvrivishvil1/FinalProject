@@ -32,6 +32,15 @@
                 android:textColor="#FFFF"
                 android:textSize="20sp"
                 android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/delete_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                app:srcCompat="@android:drawable/ic_menu_delete" />
         </androidx.appcompat.widget.Toolbar>
 
         <androidx.constraintlayout.widget.ConstraintLayout

@@ -59,6 +59,12 @@ public class MessagePresenter implements MessageContract.Presenter {
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    @Override
+    public void deleteHistory(long id) {
+        Database.getInstance().dataDao().deleteHistory(id);
+        Database.getInstance().dataDao().deleteMessages(id);
+    }
+
     private MessageModel FromEntityToModel(MessageModelEntity model) {
         return new MessageModel(model.getId(), model.getUserId(), model.getText(), model.isSent(), model.getMessageDateAsDate());
     }
