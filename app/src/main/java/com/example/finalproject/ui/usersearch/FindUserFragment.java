@@ -1,5 +1,10 @@
 package com.example.finalproject.ui.usersearch;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,11 +25,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalproject.R;
+import com.example.finalproject.WifiDirectBroadcastReceiver;
 import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static android.os.Looper.getMainLooper;
 
 public class FindUserFragment extends Fragment implements UserSearchContract.View{
 
@@ -79,14 +89,33 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.GONE);
         ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText("მომხმარებლები");
 
-        this.presenter = new UserSearchPresenter(this);
+        this.presenter = new UserSearchPresenter(this, getActivity());
         this.presenter.searchUsers();
+    }
+
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        presenter.registerReceiver();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.unregisterReceiver();
     }
 
     @Override
     public void showData(List<HistoryModel> list) {
         getActivity().findViewById(R.id.toolbar).setVisibility(View.VISIBLE);
         adapter.setItems(list);
+    }
+
+    @Override
+    public void chatClicked(HistoryModel model) {
+        presenter.chatClicked(model);
     }
 
     @Override

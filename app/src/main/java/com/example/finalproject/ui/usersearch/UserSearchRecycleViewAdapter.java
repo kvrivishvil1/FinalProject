@@ -46,7 +46,7 @@ public class UserSearchRecycleViewAdapter extends RecyclerView.Adapter<RecyclerV
                 @Override
                 public void onClick(View v) {
                     final int position = holder.getAdapterPosition();
-                    view.addUser(items.get(position/2));
+                    view.chatClicked(items.get(position/2));
                 }
             });
             return  holder;

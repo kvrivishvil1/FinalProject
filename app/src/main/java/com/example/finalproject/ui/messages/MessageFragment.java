@@ -3,7 +3,11 @@ package com.example.finalproject.ui.messages;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,6 +36,13 @@ import com.example.finalproject.ui.models.HistoryModel;
 import com.example.finalproject.ui.models.MessageModel;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 
 public class MessageFragment extends Fragment implements MessageContract.View {
@@ -46,6 +57,69 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     private EditText messageText;
     private ImageView sendButton;
     private ProgressBar progressBar;
+
+    static final int MESSAGE_READ = 1;
+
+    ServerClass serverClass;
+    ClientClass clientClass;
+    SendReceive sendReceive;
+
+
+    Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(@NonNull Message message) {
+            switch (message.what) {
+                case MESSAGE_READ:
+                    byte[] readBuff = (byte[]) message.obj;
+                    String tempMsg = new String(readBuff, 0, message.arg1);
+                    // msg in tempmsg
+                    break;
+            }
+            return true;
+        }
+    });
+
+    private class SendReceive extends Thread {
+        private Socket socket;
+        private InputStream inputStream;
+        private OutputStream outputStream;
+
+        public SendReceive(Socket sock) {
+            socket = sock;
+            try {
+                inputStream = socket.getInputStream();
+                outputStream = socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            byte[] buffer = new byte[1024];
+            int bytes;
+
+            while (socket != null) {
+                try {
+                    bytes = inputStream.read(buffer);
+                    if (bytes > 0) {
+                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void write(byte[] bytes) {
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public MessageFragment() {
     }
@@ -79,6 +153,15 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         progressBar = view.findViewById(R.id.progress_bar);
         messageText = view.findViewById(R.id.message_input);
         sendButton = view.findViewById(R.id.message_send);
+
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String msg = messageText.getText().toString();
+                if (!msg.isEmpty()) return;
+                sendReceive.write(msg.getBytes());
+            }
+        });
 
         model = (HistoryModel) bundle.getSerializable("HistoryModel");
         if(model == null) {
@@ -162,6 +245,46 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     @Override
     public void showData(List<MessageModel> list) {
         this.adapter.setItems(list);
+    }
+
+    public class ServerClass extends Thread {
+        Socket socket;
+        ServerSocket serverSocket;
+
+        @Override
+        public void run() {
+            try {
+                serverSocket = new ServerSocket(8888);
+                socket = serverSocket.accept();
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public class ClientClass extends Thread {
+        Socket socket;
+        String hostAdd;
+
+        public ClientClass(InetAddress hostAddress) {
+            hostAdd = hostAddress.getHostAddress();
+            socket = new Socket();
+        }
+
+        @Override
+        public void run() {
+            try {
+                socket.connect(new InetSocketAddress(hostAdd, 8888), 500);
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 }

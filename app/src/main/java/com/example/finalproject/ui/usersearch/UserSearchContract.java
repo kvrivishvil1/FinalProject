@@ -1,5 +1,9 @@
 package com.example.finalproject.ui.usersearch;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pManager;
+
 import com.example.finalproject.ui.models.HistoryModel;
 import com.example.finalproject.ui.models.MessageModel;
 
@@ -11,10 +15,16 @@ public interface UserSearchContract {
         void addUser(HistoryModel model);
         void showProgressBar();
         void hideProgressBar();
+        void chatClicked(HistoryModel model);
     }
 
     interface Presenter {
         void searchUsers();
         HistoryModel addUser(HistoryModel model);
+        WifiP2pManager.PeerListListener getPeerListListener();
+        void registerReceiver();
+        void unregisterReceiver();
+        WifiP2pManager.ConnectionInfoListener getConnectionInfoListener();
+        void chatClicked(HistoryModel model);
     }
 }
