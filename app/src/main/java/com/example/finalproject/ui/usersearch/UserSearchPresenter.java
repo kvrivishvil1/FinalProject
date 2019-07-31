@@ -47,6 +47,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     private UserSearchContract.View view;
     private Context context;
+    private boolean isPaused;
+    private boolean isConnected;
 
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
@@ -61,6 +63,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
+        this.isPaused = false;
+        this.isConnected = false;
 
         setupBroadcastReceiver();
     }
@@ -68,6 +72,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     @SuppressLint("StaticFieldLeak")
     @Override
     public void searchUsers() {
+        view.showProgressBar();
         setupDiscover();
     }
 
@@ -81,23 +86,26 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION);
     }
 
-    private void setupDiscover() {
-        wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+    private WifiP2pManager.ActionListener discoverListener = new WifiP2pManager.ActionListener() {
 
-            @Override
-            public void onSuccess() {
+        @Override
+        public void onSuccess() {
 //                Toast.makeText(context, "Discovering peers...", Toast.LENGTH_SHORT).show();
-                view.showProgressBar();
-            }
+        }
 
-            @Override
-            public void onFailure(int i) {
-                Toast.makeText(context, "Discovering peers failed", Toast.LENGTH_SHORT).show();
+        @Override
+        public void onFailure(int i) {
+            Toast.makeText(context, "Discovering peers failed", Toast.LENGTH_SHORT).show();
 
-            }
-        });
+        }
+    };
+
+    @Override
+    public void setupDiscover() {
+        wifiP2pManager.discoverPeers(channel, discoverListener);
     }
 
     private WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
@@ -127,6 +135,37 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     };
 
     @Override
+    public void stopDiscovery() {
+        wifiP2pManager.stopPeerDiscovery(channel, discoverListener);
+    }
+
+    @Override
+    public void cancelConnect() {
+        wifiP2pManager.cancelConnect(channel, connectListener);
+        isConnected = false;
+    }
+
+    @Override
+    public boolean isPaused() {
+        return this.isPaused;
+    }
+
+    @Override
+    public void setPaused(boolean paused) {
+        this.isPaused = paused;
+    }
+
+    @Override
+    public void setConnected(boolean connected) {
+        this.isConnected = connected;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return this.isConnected;
+    }
+
+    @Override
     public WifiP2pManager.PeerListListener getPeerListListener() {
         return peerListListener;
     }
@@ -142,6 +181,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     @Override
     public void unregisterReceiver() {
         context.unregisterReceiver(receiver);
+        receiver = null;
 //        Toast.makeText(context, "Receiver unregistered", Toast.LENGTH_SHORT).show();
     }
 
@@ -154,6 +194,21 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         return model;
     }
 
+    private WifiP2pManager.ActionListener connectListener = new WifiP2pManager.ActionListener() {
+        @Override
+        public void onSuccess() {
+            Toast.makeText(context.getApplicationContext(), "Connected to " + clickedModel.getDevice().deviceName, Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onFailure(int i) {
+            String deviceName = "device";
+            if (clickedModel != null)
+                deviceName = clickedModel.getDevice().deviceName;
+            Toast.makeText(context, "Could not connect " + deviceName, Toast.LENGTH_SHORT).show();
+        }
+    };
+
     @Override
     public void chatClicked(HistoryModel model) {
         clickedModel = model;
@@ -162,40 +217,36 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
 
-        wifiP2pManager.connect(channel, config, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Toast.makeText(context.getApplicationContext(), "Connected to " + device.deviceName, Toast.LENGTH_SHORT).show();
-
-                addUser(clickedModel);
-
-                Bundle args = new Bundle();
-                args.putSerializable("NewHistoryModel", clickedModel);
-
-                NavController navController = Navigation.findNavController((MainActivity)context, R.id.main_fragment);
-                navController.navigate(R.id.action_findUserFragment_to_messageFragment, args);
-
-            }
-
-            @Override
-            public void onFailure(int i) {
-                Toast.makeText(context, "Could not connect " + device.deviceName, Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (isConnected)
+            gotoChat();
+        else
+            wifiP2pManager.connect(channel, config, connectListener);
     }
 
     private WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 // Host
+                if (clickedModel == null) return;
+
+                gotoChat();
             } else if (wifiP2pInfo.groupFormed) {
                 // Client
             }
         }
     };
+
+    private void gotoChat() {
+        addUser(clickedModel);
+
+        Bundle args = new Bundle();
+        args.putSerializable("NewHistoryModel", clickedModel);
+
+        NavController navController = Navigation.findNavController((MainActivity)context, R.id.main_fragment);
+        navController.navigate(R.id.action_findUserFragment_to_messageFragment, args);
+    }
 
     @Override
     public WifiP2pManager.ConnectionInfoListener getConnectionInfoListener() {
@@ -300,5 +351,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         }
 
     }
+
+
 
 }

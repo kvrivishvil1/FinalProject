@@ -98,6 +98,7 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     @Override
     public void onResume() {
         super.onResume();
+        presenter.setPaused(false);
         presenter.registerReceiver();
     }
 
@@ -105,6 +106,18 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     public void onPause() {
         super.onPause();
         presenter.unregisterReceiver();
+        presenter.setPaused(true);
+        presenter.stopDiscovery();
+        presenter.cancelConnect();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        presenter.unregisterReceiver();
+        presenter.setPaused(true);
+        presenter.stopDiscovery();
+        presenter.cancelConnect();
     }
 
     @Override

@@ -46,8 +46,22 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             if (networkInfo.isConnected()) {
                 manager.requestConnectionInfo(channel, presenter.getConnectionInfoListener());
             }
+            presenter.setConnected(networkInfo.isConnected());
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 
+        } else if (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals(action)) {
+            int state = intent.getIntExtra(WifiP2pManager.EXTRA_DISCOVERY_STATE, 10000);
+            if (state == WifiP2pManager.WIFI_P2P_DISCOVERY_STARTED) {
+                Toast.makeText(context, "---------Discovery started", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "+++++++++Discovery stopped", Toast.LENGTH_SHORT).show();
+                if (!presenter.isPaused()) {
+                    presenter.stopDiscovery();
+                    presenter.setupDiscover();
+                    Toast.makeText(context, "+++++++++Discovery restarted", Toast.LENGTH_SHORT).show();
+
+                }
+            }
         }
     }
 }

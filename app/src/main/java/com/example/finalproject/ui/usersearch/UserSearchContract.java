@@ -26,5 +26,12 @@ public interface UserSearchContract {
         void unregisterReceiver();
         WifiP2pManager.ConnectionInfoListener getConnectionInfoListener();
         void chatClicked(HistoryModel model);
+        void stopDiscovery();
+        boolean isPaused();
+        void setPaused(boolean paused);
+        void setupDiscover();
+        void cancelConnect();
+        boolean isConnected();
+        void setConnected(boolean connected);
     }
 }
