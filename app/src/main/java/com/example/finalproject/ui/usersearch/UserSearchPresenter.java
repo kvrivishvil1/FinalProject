@@ -61,6 +61,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     HistoryModel clickedModel;
 
+    WifiP2pDevice connectedDevice;
+
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
@@ -231,6 +233,11 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         return model;
     }
 
+    @Override
+    public void setConnectedDevice(WifiP2pDevice device) {
+        connectedDevice = device;
+    }
+
     private WifiP2pManager.ActionListener connectListener = new WifiP2pManager.ActionListener() {
         @Override
         public void onSuccess() {
@@ -271,6 +278,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                 gotoChat();
             } else if (wifiP2pInfo.groupFormed) {
                 // Client
+                if (clickedModel == null) return;
+                gotoChat();
             }
         }
     };

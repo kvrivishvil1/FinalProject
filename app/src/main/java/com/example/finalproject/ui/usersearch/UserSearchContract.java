@@ -2,6 +2,7 @@ package com.example.finalproject.ui.usersearch;
 
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 
 import com.example.finalproject.ui.models.HistoryModel;
@@ -35,5 +36,6 @@ public interface UserSearchContract {
         void onResume();
         void onPause();
         void onDestroy();
+        void setConnectedDevice(WifiP2pDevice device);
     }
 }

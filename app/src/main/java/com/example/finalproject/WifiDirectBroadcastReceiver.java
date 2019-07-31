@@ -4,11 +4,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
 
 import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.usersearch.UserSearchContract;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager manager;
@@ -42,6 +47,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             if (manager == null) return;
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+            Collection<WifiP2pDevice> mClients = ((WifiP2pGroup)intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP)).getClientList();
+
+            if (mClients.size() > 0) {
+                WifiP2pDevice dev = new ArrayList<>(mClients).get(0);
+                presenter.setConnectedDevice(dev);
+            }
 
             if (networkInfo.isConnected()) {
                 manager.requestConnectionInfo(channel, presenter.getConnectionInfoListener());
