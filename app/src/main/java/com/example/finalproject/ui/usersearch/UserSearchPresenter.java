@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -67,6 +68,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         this.isConnected = false;
 
         setupBroadcastReceiver();
+        disconnect();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -97,9 +99,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         }
 
         @Override
-        public void onFailure(int i) {
-            Toast.makeText(context, "Discovering peers failed", Toast.LENGTH_SHORT).show();
-
+        public void onFailure(int reason) {
+            Toast.makeText(context, "Discovering peers failed. reason: " + reason, Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -146,13 +147,49 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     }
 
     @Override
+    public void onResume() {
+        isPaused = false;
+        registerReceiver();
+
+        disconnect();
+
+    }
+
+    @Override
+    public void onPause() {
+        unregisterReceiver();
+        isPaused = true;
+        stopDiscovery();
+
+        disconnect();
+    }
+
+    @Override
     public boolean isPaused() {
         return this.isPaused;
     }
 
     @Override
-    public void setPaused(boolean paused) {
-        this.isPaused = paused;
+    public void onDestroy() {
+        unregisterReceiver();
+        isPaused = true;
+        stopDiscovery();
+
+        disconnect();
+    }
+
+    private void disconnect() {
+        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d("main", "removeGroup onSuccess");
+                isConnected = false;
+            }
+            @Override
+            public void onFailure(int reason) {
+                Log.d("main", "removeGroup onFailure -" + reason);
+            }
+        });
     }
 
     @Override
@@ -201,11 +238,11 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         }
 
         @Override
-        public void onFailure(int i) {
+        public void onFailure(int reason) {
             String deviceName = "device";
             if (clickedModel != null)
                 deviceName = clickedModel.getDevice().deviceName;
-            Toast.makeText(context, "Could not connect " + deviceName, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Could not connect " + deviceName + " reason: " + reason, Toast.LENGTH_SHORT).show();
         }
     };
 

@@ -28,10 +28,12 @@ public interface UserSearchContract {
         void chatClicked(HistoryModel model);
         void stopDiscovery();
         boolean isPaused();
-        void setPaused(boolean paused);
         void setupDiscover();
         void cancelConnect();
         boolean isConnected();
         void setConnected(boolean connected);
+        void onResume();
+        void onPause();
+        void onDestroy();
     }
 }
