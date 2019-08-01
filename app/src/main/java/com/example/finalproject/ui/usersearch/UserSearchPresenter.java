@@ -36,6 +36,8 @@ import com.example.finalproject.ui.models.MessageModel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -63,11 +65,16 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     WifiP2pDevice connectedDevice;
 
+    boolean reconnecting;
+
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
         this.isPaused = false;
         this.isConnected = false;
+        this.clickedModel = null;
+        this.connectedDevice = null;
+        this.reconnecting = false;
 
         setupBroadcastReceiver();
         disconnect();
@@ -142,19 +149,14 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         wifiP2pManager.stopPeerDiscovery(channel, discoverListener);
     }
 
-    @Override
-    public void cancelConnect() {
-        wifiP2pManager.cancelConnect(channel, connectListener);
-        isConnected = false;
+    private void cancelConnect() {
+        wifiP2pManager.cancelConnect(channel, cancelListener);
     }
 
     @Override
     public void onResume() {
         isPaused = false;
         registerReceiver();
-
-        disconnect();
-
     }
 
     @Override
@@ -163,7 +165,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         isPaused = true;
         stopDiscovery();
 
-        disconnect();
+//        disconnect();
     }
 
     @Override
@@ -185,13 +187,35 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             @Override
             public void onSuccess() {
                 Log.d("main", "removeGroup onSuccess");
-                isConnected = false;
             }
             @Override
             public void onFailure(int reason) {
                 Log.d("main", "removeGroup onFailure -" + reason);
             }
         });
+
+        cancelConnect();
+
+        deleteGroups();
+    }
+
+    private void deleteGroups() {
+        Method deletePersistentGroupMethod = null;
+        try {
+            deletePersistentGroupMethod = WifiP2pManager.class.getMethod("deletePersistentGroup", WifiP2pManager.Channel.class, int.class, WifiP2pManager.ActionListener.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
+        for (int netid = 0; netid < 32; netid++) {
+            try {
+                deletePersistentGroupMethod.invoke(wifiP2pManager, this.channel, netid, null);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -253,18 +277,46 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         }
     };
 
+    private WifiP2pManager.ActionListener cancelListener = new WifiP2pManager.ActionListener() {
+        @Override
+        public void onSuccess() {
+            Toast.makeText(context.getApplicationContext(), "Cancel connect successful", Toast.LENGTH_SHORT).show();
+            isConnected = false;
+            if (reconnecting) {
+                reconnecting = false;
+                connectToDevice();
+            }
+        }
+
+        @Override
+        public void onFailure(int reason) {
+            Toast.makeText(context.getApplicationContext(), "Cancel connect failed", Toast.LENGTH_SHORT).show();
+
+            if (reconnecting) {
+                reconnecting = false;
+                connectToDevice();
+            }
+        }
+    };
+
     @Override
     public void chatClicked(HistoryModel model) {
         clickedModel = model;
 
-        final WifiP2pDevice device = model.getDevice();
+        if (isConnected)
+            gotoChat(clickedModel);
+        else {
+            this.reconnecting = true;
+            // it will connect in success
+            wifiP2pManager.cancelConnect(channel, cancelListener);
+        }
+    }
+
+    private void connectToDevice() {
+        final WifiP2pDevice device = clickedModel.getDevice();
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
-
-        if (isConnected)
-            gotoChat();
-        else
-            wifiP2pManager.connect(channel, config, connectListener);
+        wifiP2pManager.connect(channel, config, connectListener);
     }
 
     private WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
@@ -273,19 +325,28 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 // Host
-                if (clickedModel == null) return;
-
-                gotoChat();
+                if (clickedModel == null && connectedDevice == null) return;
+                if (clickedModel != null)
+                    gotoChat(clickedModel);
+                else if (connectedDevice != null) {
+                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+                    gotoChat(model);
+                }
             } else if (wifiP2pInfo.groupFormed) {
                 // Client
-                if (clickedModel == null) return;
-                gotoChat();
+                if (clickedModel == null && connectedDevice == null) return;
+                if (clickedModel != null)
+                    gotoChat(clickedModel);
+                else if (connectedDevice != null) {
+                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+                    gotoChat(model);
+                }
             }
         }
     };
 
-    private void gotoChat() {
-        addUser(clickedModel);
+    private void gotoChat(HistoryModel model) {
+        addUser(model);
 
         Bundle args = new Bundle();
         args.putSerializable("NewHistoryModel", clickedModel);

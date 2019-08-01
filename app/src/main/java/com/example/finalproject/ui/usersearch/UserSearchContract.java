@@ -30,7 +30,6 @@ public interface UserSearchContract {
         void stopDiscovery();
         boolean isPaused();
         void setupDiscover();
-        void cancelConnect();
         boolean isConnected();
         void setConnected(boolean connected);
         void onResume();

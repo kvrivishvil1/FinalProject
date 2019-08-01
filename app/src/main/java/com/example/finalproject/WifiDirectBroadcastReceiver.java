@@ -52,10 +52,14 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             if (mClients.size() > 0) {
                 WifiP2pDevice dev = new ArrayList<>(mClients).get(0);
                 presenter.setConnectedDevice(dev);
+            } else {
+                presenter.setConnectedDevice(null);
             }
 
             if (networkInfo.isConnected()) {
                 manager.requestConnectionInfo(channel, presenter.getConnectionInfoListener());
+            } else {
+
             }
             presenter.setConnected(networkInfo.isConnected());
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
