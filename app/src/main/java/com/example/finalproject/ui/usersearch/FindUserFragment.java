@@ -42,6 +42,10 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     private UserSearchRecycleViewAdapter adapter;
     private UserSearchPresenter presenter;
 
+    private Button sendMessageBtn;
+    private TextView statusText;
+    private TextView msgText;
+
     public FindUserFragment() {
     }
 
@@ -65,6 +69,16 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
 
         TextView title = getActivity().findViewById(R.id.toolbar_title);
         title.setText("");
+
+        sendMessageBtn = getActivity().findViewById(R.id.send_msg_btn);
+        statusText = getActivity().findViewById(R.id.status_text);
+
+        sendMessageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                presenter.onMessageSend();
+            }
+        });
 
         searchLayout = view.findViewById(R.id.user_search_layout);
 
@@ -108,6 +122,12 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        presenter.onStop();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         presenter.onDestroy();
@@ -117,6 +137,16 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     public void showData(List<HistoryModel> list) {
         getActivity().findViewById(R.id.toolbar).setVisibility(View.VISIBLE);
         adapter.setItems(list);
+    }
+
+    @Override
+    public void changeStatus(String status) {
+        statusText.setText(status);
+    }
+
+    @Override
+    public void setMessage(String message) {
+        msgText.setText(message);
     }
 
     @Override

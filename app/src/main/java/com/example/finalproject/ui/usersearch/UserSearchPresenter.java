@@ -67,6 +67,10 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     boolean reconnecting;
 
+    ServerClass serverClass;
+    ClientClass clientClass;
+    SendReceive sendReceive;
+
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
@@ -113,6 +117,19 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         }
     };
 
+    private WifiP2pManager.ActionListener stopDiscoverListener = new WifiP2pManager.ActionListener() {
+
+        @Override
+        public void onSuccess() {
+//                Toast.makeText(context, "Peers discovery stopped", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onFailure(int reason) {
+            Toast.makeText(context, "Peers discovery stop failed. reason: " + reason, Toast.LENGTH_SHORT).show();
+        }
+    };
+
     @Override
     public void setupDiscover() {
         wifiP2pManager.discoverPeers(channel, discoverListener);
@@ -146,7 +163,9 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     @Override
     public void stopDiscovery() {
-        wifiP2pManager.stopPeerDiscovery(channel, discoverListener);
+        peers = new ArrayList<>();
+        view.showData(new ArrayList<HistoryModel>());
+        wifiP2pManager.stopPeerDiscovery(channel, stopDiscoverListener);
     }
 
     private void cancelConnect() {
@@ -165,8 +184,15 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         isPaused = true;
         stopDiscovery();
 
-//        disconnect();
+        disconnect();
     }
+
+    @Override
+    public void onStop() {
+        int x = 5;
+    }
+
+
 
     @Override
     public boolean isPaused() {
@@ -266,6 +292,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void onSuccess() {
             Toast.makeText(context.getApplicationContext(), "Connected to " + clickedModel.getDevice().deviceName, Toast.LENGTH_SHORT).show();
+            view.changeStatus("Connected");
         }
 
         @Override
@@ -281,6 +308,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void onSuccess() {
             Toast.makeText(context.getApplicationContext(), "Cancel connect successful", Toast.LENGTH_SHORT).show();
+            view.changeStatus("Not Connected");
             isConnected = false;
             if (reconnecting) {
                 reconnecting = false;
@@ -323,24 +351,36 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+//            if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
+//                // Host
+//                if (clickedModel == null && connectedDevice == null) return;
+//                if (clickedModel != null)
+//                    gotoChat(clickedModel);
+//                else if (connectedDevice != null) {
+//                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+//                    gotoChat(model);
+//                }
+//            } else if (wifiP2pInfo.groupFormed) {
+//                // Client
+//                if (clickedModel == null && connectedDevice == null) return;
+//                if (clickedModel != null)
+//                    gotoChat(clickedModel);
+//                else if (connectedDevice != null) {
+//                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+//                    gotoChat(model);
+//                }
+//            }
+
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 // Host
-                if (clickedModel == null && connectedDevice == null) return;
-                if (clickedModel != null)
-                    gotoChat(clickedModel);
-                else if (connectedDevice != null) {
-                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-                    gotoChat(model);
-                }
+                view.changeStatus("Host");
+                serverClass = new ServerClass();
+                serverClass.start();
             } else if (wifiP2pInfo.groupFormed) {
                 // Client
-                if (clickedModel == null && connectedDevice == null) return;
-                if (clickedModel != null)
-                    gotoChat(clickedModel);
-                else if (connectedDevice != null) {
-                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-                    gotoChat(model);
-                }
+                view.changeStatus("Client");
+                clientClass = new ClientClass(groupOwnerAddress);
+                clientClass.start();
             }
         }
     };
@@ -353,6 +393,15 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
         NavController navController = Navigation.findNavController((MainActivity)context, R.id.main_fragment);
         navController.navigate(R.id.action_findUserFragment_to_messageFragment, args);
+    }
+
+    private int counter = 1;
+
+    @Override
+    public void onMessageSend() {
+        if (sendReceive == null) return;
+        String msg = "test message" + (counter++);
+        sendReceive.write(msg.getBytes());
     }
 
     @Override
@@ -376,11 +425,12 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             try {
                 serverSocket = new ServerSocket(8888);
                 socket = serverSocket.accept();
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
     }
 
     Handler handler = new Handler(new Handler.Callback() {
@@ -391,6 +441,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     byte[] readBuff = (byte[]) message.obj;
                     String tempMsg = new String(readBuff, 0, message.arg1);
                     // msg in tempmsg
+                    view.setMessage(tempMsg);
                     break;
             }
             return true;
@@ -402,8 +453,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         private InputStream inputStream;
         private OutputStream outputStream;
 
-        public SendReceive(Socket sock) {
-            socket = sock;
+        public SendReceive(Socket skt) {
+            socket = skt;
             try {
                 inputStream = socket.getInputStream();
                 outputStream = socket.getOutputStream();
@@ -422,7 +473,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     bytes = inputStream.read(buffer);
                     if (bytes > 0) {
                         handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

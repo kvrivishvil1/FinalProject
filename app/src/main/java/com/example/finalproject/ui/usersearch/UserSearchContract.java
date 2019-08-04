@@ -17,6 +17,8 @@ public interface UserSearchContract {
         void showProgressBar();
         void hideProgressBar();
         void chatClicked(HistoryModel model);
+        void changeStatus(String status);
+        void setMessage(String message);
     }
 
     interface Presenter {
@@ -34,7 +36,9 @@ public interface UserSearchContract {
         void setConnected(boolean connected);
         void onResume();
         void onPause();
+        void onStop();
         void onDestroy();
         void setConnectedDevice(WifiP2pDevice device);
+        void onMessageSend();
     }
 }
