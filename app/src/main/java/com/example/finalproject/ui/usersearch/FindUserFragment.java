@@ -72,6 +72,7 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
 
         sendMessageBtn = getActivity().findViewById(R.id.send_msg_btn);
         statusText = getActivity().findViewById(R.id.status_text);
+        msgText = getActivity().findViewById(R.id.msg_text);
 
         sendMessageBtn.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -47,19 +47,18 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             if (manager == null) return;
 
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-            Collection<WifiP2pDevice> mClients = ((WifiP2pGroup)intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP)).getClientList();
+            WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
 
-            if (mClients.size() > 0) {
-                WifiP2pDevice dev = new ArrayList<>(mClients).get(0);
-                presenter.setConnectedDevice(dev);
-            } else {
-                presenter.setConnectedDevice(null);
-            }
-
-            if (networkInfo.isConnected()) {
+            if (networkInfo.isConnected() && group != null) {
+                if (group.isGroupOwner()) {
+                    WifiP2pDevice dev = new ArrayList<>(group.getClientList()).get(0);
+                    presenter.setConnectedDevice(dev);
+                } else {
+                    presenter.setConnectedDevice(group.getOwner());
+                }
                 manager.requestConnectionInfo(channel, presenter.getConnectionInfoListener());
             } else {
-
+                presenter.setConnectedDevice(null);
             }
             presenter.setConnected(networkInfo.isConnected());
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
@@ -70,12 +69,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 Toast.makeText(context, "---------Discovery started", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(context, "+++++++++Discovery stopped", Toast.LENGTH_SHORT).show();
-                if (!presenter.isPaused()) {
-                    presenter.stopDiscovery();
-                    presenter.setupDiscover();
-                    Toast.makeText(context, "+++++++++Discovery restarted", Toast.LENGTH_SHORT).show();
-
-                }
             }
         }
     }

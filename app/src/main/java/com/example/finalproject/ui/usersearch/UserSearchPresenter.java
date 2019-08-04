@@ -146,7 +146,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                 peers.clear();
                 peers.addAll(wifiP2pDeviceList.getDeviceList());
 
-                for (WifiP2pDevice device: wifiP2pDeviceList.getDeviceList()) {
+                for (WifiP2pDevice device : wifiP2pDeviceList.getDeviceList()) {
                     result.add(new HistoryModel(device.deviceName, device));
                 }
             }
@@ -193,7 +193,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     }
 
 
-
     @Override
     public boolean isPaused() {
         return this.isPaused;
@@ -206,6 +205,17 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         stopDiscovery();
 
         disconnect();
+
+
+    }
+
+    private void closeSocket() {
+        if (serverClass == null || serverClass.socket == null) return;
+        try {
+            serverClass.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void disconnect() {
@@ -214,6 +224,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             public void onSuccess() {
                 Log.d("main", "removeGroup onSuccess");
             }
+
             @Override
             public void onFailure(int reason) {
                 Log.d("main", "removeGroup onFailure -" + reason);
@@ -223,6 +234,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         cancelConnect();
 
         deleteGroups();
+
+        closeSocket();
     }
 
     private void deleteGroups() {
@@ -263,15 +276,12 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     public void registerReceiver() {
         receiver = new WifiDirectBroadcastReceiver(wifiP2pManager, channel, this);
         context.registerReceiver(receiver, intentFilter);
-//        Toast.makeText(context, "Receiver registered", Toast.LENGTH_SHORT).show();
-
     }
 
     @Override
     public void unregisterReceiver() {
         context.unregisterReceiver(receiver);
         receiver = null;
-//        Toast.makeText(context, "Receiver unregistered", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -309,7 +319,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         public void onSuccess() {
             Toast.makeText(context.getApplicationContext(), "Cancel connect successful", Toast.LENGTH_SHORT).show();
             view.changeStatus("Not Connected");
-            isConnected = false;
             if (reconnecting) {
                 reconnecting = false;
                 connectToDevice();
@@ -331,13 +340,9 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     public void chatClicked(HistoryModel model) {
         clickedModel = model;
 
-        if (isConnected)
-            gotoChat(clickedModel);
-        else {
-            this.reconnecting = true;
-            // it will connect in success
-            wifiP2pManager.cancelConnect(channel, cancelListener);
-        }
+        this.reconnecting = true;
+        // it will connect in success
+        wifiP2pManager.cancelConnect(channel, cancelListener);
     }
 
     private void connectToDevice() {
@@ -351,26 +356,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-//            if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
-//                // Host
-//                if (clickedModel == null && connectedDevice == null) return;
-//                if (clickedModel != null)
-//                    gotoChat(clickedModel);
-//                else if (connectedDevice != null) {
-//                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-//                    gotoChat(model);
-//                }
-//            } else if (wifiP2pInfo.groupFormed) {
-//                // Client
-//                if (clickedModel == null && connectedDevice == null) return;
-//                if (clickedModel != null)
-//                    gotoChat(clickedModel);
-//                else if (connectedDevice != null) {
-//                    HistoryModel model = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-//                    gotoChat(model);
-//                }
-//            }
-
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 // Host
                 view.changeStatus("Host");
@@ -386,12 +371,12 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     };
 
     private void gotoChat(HistoryModel model) {
-        addUser(model);
+        model = addUser(model);
 
         Bundle args = new Bundle();
-        args.putSerializable("NewHistoryModel", clickedModel);
+        args.putSerializable("NewHistoryModel", model);
 
-        NavController navController = Navigation.findNavController((MainActivity)context, R.id.main_fragment);
+        NavController navController = Navigation.findNavController((MainActivity) context, R.id.main_fragment);
         navController.navigate(R.id.action_findUserFragment_to_messageFragment, args);
     }
 
@@ -400,6 +385,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     @Override
     public void onMessageSend() {
         if (sendReceive == null) return;
+        Toast.makeText(context, "Sending message " + counter, Toast.LENGTH_SHORT).show();
+
         String msg = "test message" + (counter++);
         sendReceive.write(msg.getBytes());
     }
@@ -423,10 +410,15 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(8888);
+                serverSocket = new ServerSocket(7878);
                 socket = serverSocket.accept();
                 sendReceive = new SendReceive(socket);
                 sendReceive.start();
+
+                HistoryModel partner = clickedModel;
+                if (partner == null) partner = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+
+                gotoChat(partner);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -482,9 +474,22 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
         public void write(byte[] bytes) {
             try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
+                new SendMessageThread().execute(bytes);
+            } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+
+        private class SendMessageThread extends AsyncTask<byte[], Void, Void> {
+
+            @Override
+            protected Void doInBackground(byte[]... bytesArr) {
+                try {
+                    outputStream.write(bytesArr[0]);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
             }
         }
     }
@@ -501,14 +506,24 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void run() {
             try {
-                socket.connect(new InetSocketAddress(hostAdd, 8888), 500);
+                socket.connect(new InetSocketAddress(hostAdd, 7878), 500);
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+
+                if (clickedModel == null && connectedDevice == null) {
+                    Toast.makeText(context, "Device not found", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                HistoryModel partner = clickedModel;
+                if (partner == null) partner = new HistoryModel(connectedDevice.deviceName, connectedDevice);
+
+                gotoChat(partner);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
     }
-
 
 
 }
