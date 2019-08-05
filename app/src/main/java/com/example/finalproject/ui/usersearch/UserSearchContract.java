@@ -16,11 +16,10 @@ public interface UserSearchContract {
         void showProgressBar(String text);
         void hideProgressBar();
         void chatClicked(HistoryModel model);
-        void changeStatus(String status);
+        void setDiscovery(boolean on);
     }
 
     interface Presenter {
-        void searchUsers();
         HistoryModel addUser(HistoryModel model);
         WifiP2pManager.PeerListListener getPeerListListener();
         void registerReceiver();
@@ -34,5 +33,6 @@ public interface UserSearchContract {
         void onStop();
         void onDestroy();
         void setConnectedDevice(WifiP2pDevice device);
+        void setDiscovery(boolean on);
     }
 }

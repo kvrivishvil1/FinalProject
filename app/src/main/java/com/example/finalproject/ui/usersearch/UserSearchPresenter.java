@@ -86,12 +86,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         disconnect();
     }
 
-    @SuppressLint("StaticFieldLeak")
-    @Override
-    public void searchUsers() {
-
-    }
-
     private void setupBroadcastReceiver() {
         wifiP2pManager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(context.getApplicationContext(), context.getMainLooper(), null);
@@ -114,7 +108,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
         @Override
         public void onFailure(int reason) {
-            Toast.makeText(context, "Discovering peers failed. reason: " + reason, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Discovering peers failed. reason: " + reason, Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -127,13 +121,18 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
         @Override
         public void onFailure(int reason) {
-            Toast.makeText(context, "Peers discovery stop failed. reason: " + reason, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Peers discovery stop failed. reason: " + reason, Toast.LENGTH_SHORT).show();
         }
     };
 
     @Override
     public void setupDiscover() {
         wifiP2pManager.discoverPeers(channel, discoverListener);
+    }
+
+    @Override
+    public void setDiscovery(boolean on) {
+        view.setDiscovery(on);
     }
 
     private WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
@@ -154,10 +153,10 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             }
 
             if (peers.size() == 0) {
-                Toast.makeText(context.getApplicationContext(), "No devices found", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context.getApplicationContext(), "No devices found", Toast.LENGTH_SHORT).show();
             }
 
-            Toast.makeText(context.getApplicationContext(), peers.size() + " Devices", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context.getApplicationContext(), peers.size() + " Devices", Toast.LENGTH_SHORT).show();
 
             view.showData(result);
         }
@@ -189,7 +188,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     @Override
     public void onStop() {
-
+        int x = 5;
     }
 
 
@@ -274,8 +273,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     private WifiP2pManager.ActionListener connectListener = new WifiP2pManager.ActionListener() {
         @Override
         public void onSuccess() {
-            Toast.makeText(context.getApplicationContext(), "Connected to " + clickedModel.getDevice().deviceName, Toast.LENGTH_SHORT).show();
-            view.changeStatus("Connected");
+//            Toast.makeText(context.getApplicationContext(), "Connected to " + clickedModel.getDevice().deviceName, Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -283,15 +281,14 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             String deviceName = "device";
             if (clickedModel != null)
                 deviceName = clickedModel.getDevice().deviceName;
-            Toast.makeText(context, "Could not connect " + deviceName + " reason: " + reason, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Could not connect " + deviceName + " reason: " + reason, Toast.LENGTH_SHORT).show();
         }
     };
 
     private WifiP2pManager.ActionListener cancelListener = new WifiP2pManager.ActionListener() {
         @Override
         public void onSuccess() {
-            Toast.makeText(context.getApplicationContext(), "Cancel connect successful", Toast.LENGTH_SHORT).show();
-            view.changeStatus("Not Connected");
+//            Toast.makeText(context.getApplicationContext(), "Cancel connect successful", Toast.LENGTH_SHORT).show();
             if (reconnecting) {
                 reconnecting = false;
                 connectToDevice();
@@ -300,7 +297,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
         @Override
         public void onFailure(int reason) {
-            Toast.makeText(context.getApplicationContext(), "Cancel connect failed", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context.getApplicationContext(), "Cancel connect failed", Toast.LENGTH_SHORT).show();
 
             if (reconnecting) {
                 reconnecting = false;
@@ -337,8 +334,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
-                // Host
-                view.changeStatus("Host");
 
                 (new Thread() {
                     @Override
@@ -358,8 +353,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
 
             } else if (wifiP2pInfo.groupFormed) {
-                // Client
-                view.changeStatus("Client");
 
                 (new Thread() {
                     @Override

@@ -2,8 +2,10 @@ package com.example.finalproject.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -121,9 +123,28 @@ public class MainActivity extends AppCompatActivity {
 
     private void requirePermissions() {
 
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (!wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+            alertDialogBuilder
+                    .setCancelable(false)
+                    .setMessage("აპლიკაციის მუშაობისთვის აუცილებელია WiFi. გსურთ ჩართვა?")
+                    .setPositiveButton("კი",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    wifiManager.setWifiEnabled(true);
+                                    dialogInterface.dismiss();
+                                }
+                            })
+                    .setNegativeButton("არა",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialogInterface,int id) {
+                                    dialogInterface.cancel();
+                                }
+                            });
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
         }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

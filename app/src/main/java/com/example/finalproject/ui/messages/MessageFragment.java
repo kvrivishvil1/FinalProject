@@ -155,6 +155,8 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             }
         });
         deleteButton.setVisibility(View.VISIBLE);
+        getActivity().findViewById(R.id.radio_gif).setVisibility(View.GONE);
+        getActivity().findViewById(R.id.radio_img).setVisibility(View.GONE);
 
         this.presenter = new MessagePresenter(this, model, isHistory);
         this.presenter.loadMessages(model.getId());
@@ -190,6 +192,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     @Override
     public void showData(List<MessageModel> list) {
         this.adapter.setItems(list);
+        recyclerView.scrollToPosition(list.size() - 1);
     }
 
 }

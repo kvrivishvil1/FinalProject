@@ -51,12 +51,30 @@
 
             <ImageView
                 android:id="@+id/delete_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
                 android:layout_gravity="right"
                 android:layout_marginEnd="16dp"
                 android:visibility="visible"
-                app:srcCompat="@android:drawable/ic_menu_delete" />
+                app:srcCompat="@drawable/trash" />
+
+            <ImageView
+                android:id="@+id/radio_img"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="right"
+                android:layout_marginEnd="16dp"
+                app:srcCompat="@drawable/radio"
+                tools:visibility="gone" />
+
+            <pl.droidsonroids.gif.GifImageView
+                android:id="@+id/radio_gif"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="right"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/radiogif"
+                android:visibility="gone" />
         </androidx.appcompat.widget.Toolbar>
 
         <androidx.constraintlayout.widget.ConstraintLayout

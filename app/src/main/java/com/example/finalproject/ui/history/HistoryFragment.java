@@ -73,6 +73,8 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
         ImageView deleteButton = getActivity().findViewById(R.id.delete_button);
         deleteButton.setVisibility(View.GONE);
+        getActivity().findViewById(R.id.radio_gif).setVisibility(View.GONE);
+        getActivity().findViewById(R.id.radio_img).setVisibility(View.GONE);
 
         RecyclerView recyclerView = view.findViewById(R.id.history_recycle_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

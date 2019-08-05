@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,8 @@ import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+import pl.droidsonroids.gif.GifImageView;
+
 
 import static android.os.Looper.getMainLooper;
 
@@ -42,8 +45,10 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     private UserSearchRecycleViewAdapter adapter;
     private UserSearchPresenter presenter;
 
-    private TextView statusText;
     private TextView loadingText;
+
+    private ImageView radioImg;
+    private GifImageView radioGif;
 
     public FindUserFragment() {
     }
@@ -69,8 +74,18 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         TextView title = getActivity().findViewById(R.id.toolbar_title);
         title.setText("");
 
-        statusText = getActivity().findViewById(R.id.status_text);
         loadingText = getActivity().findViewById(R.id.loading_text);
+
+        radioImg = getActivity().findViewById(R.id.radio_img);
+        radioGif = getActivity().findViewById(R.id.radio_gif);
+
+        radioImg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                presenter.setupDiscover();
+                setDiscovery(true);
+            }
+        });
 
 
         searchLayout = view.findViewById(R.id.user_search_layout);
@@ -97,7 +112,6 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText("მომხმარებლები");
 
         this.presenter = new UserSearchPresenter(this, getActivity());
-        this.presenter.searchUsers();
     }
 
 
@@ -133,8 +147,14 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     }
 
     @Override
-    public void changeStatus(String status) {
-        statusText.setText(status);
+    public void setDiscovery(boolean on) {
+        if (on) {
+            radioImg.setVisibility(View.GONE);
+            radioGif.setVisibility(View.VISIBLE);
+        } else {
+            radioImg.setVisibility(View.VISIBLE);
+            radioGif.setVisibility(View.GONE);
+        }
     }
 
     @Override
