@@ -6,6 +6,7 @@ import java.net.Socket;
 public class SocketHandler {
     private static Socket socket;
     private static final int PORT = 8888;
+    private static final String STOP_WORD = "3g8ABPAk1RrDXX0";
 
     public static synchronized Socket getSocket(){
         return socket;
@@ -17,6 +18,24 @@ public class SocketHandler {
 
     public static synchronized int getPort() {
         return PORT;
+    }
+
+    public static synchronized String getStopWord() { return STOP_WORD; }
+
+    public static void stopSocket() {
+        if (socket == null) return;
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    socket.getOutputStream().write(getStopWord().getBytes());
+                    closeSocket();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }.start();
     }
 
     public static synchronized boolean closeSocket() {

@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (openFragmentId == R.id.findUserFragment) {
             navController.navigate(R.id.action_findUserFragment_to_historyFragment);
         } else if (openFragmentId == R.id.messageFragment) {
+            SocketHandler.stopSocket();
             navController.navigate(R.id.action_messageFragment_to_historyFragment);
         } else {
             super.onBackPressed();
@@ -190,6 +191,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        SocketHandler.closeSocket();
+        SocketHandler.stopSocket();
     }
 }

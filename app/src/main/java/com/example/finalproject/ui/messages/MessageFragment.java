@@ -169,7 +169,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         getActivity().findViewById(R.id.radio_gif).setVisibility(View.GONE);
         getActivity().findViewById(R.id.radio_img).setVisibility(View.GONE);
 
-        this.presenter = new MessagePresenter(this, model, isHistory);
+        this.presenter = new MessagePresenter(this, getActivity(), model, isHistory);
         this.presenter.loadMessages(model.getId());
         ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText(model.getName());
         getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.VISIBLE);

@@ -1,14 +1,19 @@
 package com.example.finalproject.ui.messages;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import com.example.finalproject.Helper;
+import com.example.finalproject.R;
 import com.example.finalproject.data.DataDao;
 import com.example.finalproject.data.Database;
 import com.example.finalproject.data.models.HistoryModelEntity;
@@ -32,6 +37,7 @@ import java.util.List;
 public class MessagePresenter implements MessageContract.Presenter {
 
     private MessageContract.View view;
+    private Context context;
     private HistoryModel model;
     private boolean isHistory;
 
@@ -40,8 +46,9 @@ public class MessagePresenter implements MessageContract.Presenter {
     static final int MESSAGE_READ = 1;
 
 
-    public MessagePresenter(MessageContract.View view, HistoryModel model, boolean isHistory) {
+    public MessagePresenter(MessageContract.View view, Context context, HistoryModel model, boolean isHistory) {
         this.view = view;
+        this.context = context;
         this.model = model;
         this.isHistory = isHistory;
 
@@ -132,6 +139,13 @@ public class MessagePresenter implements MessageContract.Presenter {
                     byte[] readBuff = (byte[]) message.obj;
                     String tempMsg = new String(readBuff, 0, message.arg1);
 //                     msg in tempmsg
+                    if (tempMsg.equals(SocketHandler.getStopWord())) {
+                        Toast.makeText(context, "კავშირი მოწყობილობასთან გაწყვეტილია", Toast.LENGTH_LONG).show();
+
+                        NavController navController = Navigation.findNavController((Activity) context, R.id.main_fragment);
+                        navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
+                        break;
+                    }
                     newMessage(tempMsg, false);
                     break;
             }
