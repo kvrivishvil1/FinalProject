@@ -334,12 +334,19 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
+                ((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context.getApplicationContext(), "Server", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
                 (new Thread() {
                     @Override
                     public void run() {
                         try {
                             ServerSocket serverSocket = new ServerSocket(SocketHandler.getPort());
+                            serverSocket.setReuseAddress(true);
                             Socket socket = serverSocket.accept();
                             socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
@@ -353,7 +360,12 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
 
             } else if (wifiP2pInfo.groupFormed) {
-
+                ((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context.getApplicationContext(), "Client", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 (new Thread() {
                     @Override
                     public void run() {
