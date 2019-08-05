@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class SocketHandler {
     private static Socket socket;
-    private static int port = 7170;
+    private static final int PORT = 8888;
 
     public static synchronized Socket getSocket(){
         return socket;
@@ -16,7 +16,7 @@ public class SocketHandler {
     }
 
     public static synchronized int getPort() {
-        return port;
+        return PORT;
     }
 
     public static synchronized boolean closeSocket() {

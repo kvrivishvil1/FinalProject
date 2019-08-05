@@ -43,6 +43,7 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
     private UserSearchPresenter presenter;
 
     private TextView statusText;
+    private TextView loadingText;
 
     public FindUserFragment() {
     }
@@ -69,6 +70,8 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         title.setText("");
 
         statusText = getActivity().findViewById(R.id.status_text);
+        loadingText = getActivity().findViewById(R.id.loading_text);
+
 
         searchLayout = view.findViewById(R.id.user_search_layout);
 
@@ -139,8 +142,13 @@ public class FindUserFragment extends Fragment implements UserSearchContract.Vie
         presenter.chatClicked(model);
     }
 
+    public static String SEARCHING_DEVICES = "მომხმარებლების ძებნა...";
+    public static String CONNECTING_TO = "მიმდინარეობს დაკავშირება";
+
     @Override
-    public void showProgressBar() {
+    public void showProgressBar(String text) {
+        if (!text.isEmpty())
+            loadingText.setText(text);
         searchLayout.setVisibility(View.VISIBLE);
     }
 

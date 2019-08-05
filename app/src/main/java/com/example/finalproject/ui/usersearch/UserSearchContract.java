@@ -13,7 +13,7 @@ import java.util.List;
 public interface UserSearchContract {
     interface View {
         void showData(List<HistoryModel> list);
-        void showProgressBar();
+        void showProgressBar(String text);
         void hideProgressBar();
         void chatClicked(HistoryModel model);
         void changeStatus(String status);

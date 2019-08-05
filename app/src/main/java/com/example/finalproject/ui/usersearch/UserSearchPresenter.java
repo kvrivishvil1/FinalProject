@@ -52,10 +52,17 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     private UserSearchContract.View view;
     private Context context;
-    private boolean isConnected;
 
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
+
+    enum Status {
+        NOT_CONNECTED,
+        CONNECTING,
+        CONNECTED
+    }
+
+    private Status status = Status.NOT_CONNECTED;
 
     BroadcastReceiver receiver;
     IntentFilter intentFilter;
@@ -71,7 +78,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
-        this.isConnected = false;
         this.clickedModel = null;
         this.connectedDevice = null;
         this.reconnecting = false;
@@ -133,9 +139,10 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     private WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
         @Override
         public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-            view.hideProgressBar();
-
             List<HistoryModel> result = new ArrayList<>();
+
+            if (status != Status.CONNECTING)
+                view.hideProgressBar();
 
             if (!wifiP2pDeviceList.getDeviceList().equals(peers)) {
                 peers.clear();
@@ -170,7 +177,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     @Override
     public void onResume() {
         registerReceiver();
-        view.showProgressBar();
+        view.showProgressBar(FindUserFragment.SEARCHING_DEVICES);
         setupDiscover();
     }
 
@@ -210,6 +217,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         cancelConnect();
 
         deleteGroups();
+
+        SocketHandler.closeSocket();
     }
 
     private void deleteGroups() {
@@ -304,6 +313,13 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     public void chatClicked(HistoryModel model) {
         clickedModel = model;
 
+        status = Status.CONNECTING;
+        view.showProgressBar(FindUserFragment.CONNECTING_TO + " " + model.getDevice().deviceName + "-თან");
+
+        reconnect();
+    }
+
+    private void reconnect() {
         this.reconnecting = true;
         // it will connect in success
         wifiP2pManager.cancelConnect(channel, cancelListener);
@@ -351,7 +367,20 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                         try {
                             Socket socket = new Socket();
                             SocketHandler.setSocket(socket);
-                            socket.connect(new InetSocketAddress(groupOwnerAddress, SocketHandler.getPort()), 500);
+
+                            Date startDate = new Date();
+                            while (true) {
+                                try {
+                                    socket.connect(new InetSocketAddress(groupOwnerAddress, SocketHandler.getPort()), 10000);
+                                    break;
+                                } catch (Exception e) {
+                                    Thread.sleep(1000);
+                                    Date currDate = new Date();
+                                    if (currDate.getTime() - startDate.getTime() > 30000)
+                                        break;
+                                }
+                            }
+
 
                             gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
                         } catch (Exception e) {

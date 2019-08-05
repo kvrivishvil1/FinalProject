@@ -41,11 +41,14 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/user_search_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/white"
         android:visibility="visible"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <pl.droidsonroids.gif.GifImageView
             android:id="@+id/progress_bar"
@@ -60,17 +63,20 @@
 
         <Button
             android:id="@+id/cancel_search"
+            style="@android:style/Widget.Material.Light.Button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/clear_history_button_shape"
-            android:text="@android:string/cancel"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="გასვლა"
             app:layout_constraintEnd_toEndOf="@+id/progress_bar"
             app:layout_constraintStart_toStartOf="@+id/progress_bar"
             app:layout_constraintTop_toBottomOf="@+id/progress_bar" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/loading_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
