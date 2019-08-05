@@ -3,6 +3,7 @@ package com.example.finalproject.ui.messages;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.Image;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -45,6 +46,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
+import pl.droidsonroids.gif.GifImageView;
+
 public class MessageFragment extends Fragment implements MessageContract.View {
 
     private MessageRecycleViewAdapter adapter;
@@ -53,10 +56,11 @@ public class MessageFragment extends Fragment implements MessageContract.View {
 
     private HistoryModel model;
     private boolean hideInput;
+    private boolean isHistory;
 
     private EditText messageText;
     private ImageView sendButton;
-    private ProgressBar progressBar;
+    private GifImageView progressBar;
 
     public MessageFragment() {
     }
@@ -91,24 +95,28 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         messageText = view.findViewById(R.id.message_input);
         sendButton = view.findViewById(R.id.message_send);
 
-//        sendButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                String msg = messageText.getText().toString();
-//                if (!msg.isEmpty()) return;
-//                sendReceive.write(msg.getBytes());
-//            }
-//        });
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String msg = messageText.getText().toString();
+                if (msg.isEmpty()) return;
+                messageText.setText("");
+                presenter.sendMessage(msg);
+            }
+        });
 
         model = (HistoryModel) bundle.getSerializable("HistoryModel");
         if(model == null) {
             model = (HistoryModel) bundle.getSerializable("NewHistoryModel");
             hideInput = false;
+            isHistory = false;
         } else {
             hideInput = true;
             messageText.setVisibility(View.GONE);
             sendButton.setVisibility(View.GONE);
+            isHistory = true;
         }
+
 
 
         this.recyclerView = view.findViewById(R.id.message_recycle_view);
@@ -148,7 +156,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         });
         deleteButton.setVisibility(View.VISIBLE);
 
-        this.presenter = new MessagePresenter(this);
+        this.presenter = new MessagePresenter(this, model, isHistory);
         this.presenter.loadMessages(model.getId());
         ((TextView) getActivity().findViewById(R.id.toolbar_title)).setText(model.getName());
         getActivity().findViewById(R.id.toolbar_subtitle).setVisibility(View.VISIBLE);

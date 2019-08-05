@@ -28,6 +28,8 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.ArrayList;
 import java.util.List;
 
+import pl.droidsonroids.gif.GifImageView;
+
 public class HistoryFragment extends Fragment implements HistoryContract.View {
 
     private HistoryRecycleViewAdapter adapter;
@@ -36,7 +38,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
     private Button clearHistoryBtn;
 
     private TextView historyStatus;
-    private ProgressBar progressBar;
+    private GifImageView progressBar;
 
     public HistoryFragment() {
     }

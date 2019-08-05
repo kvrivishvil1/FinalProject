@@ -60,7 +60,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             } else {
                 presenter.setConnectedDevice(null);
             }
-            presenter.setConnected(networkInfo.isConnected());
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 
         } else if (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals(action)) {

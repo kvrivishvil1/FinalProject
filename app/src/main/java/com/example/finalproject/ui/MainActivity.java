@@ -158,4 +158,10 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        SocketHandler.closeSocket();
+    }
 }

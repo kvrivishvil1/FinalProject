@@ -13,12 +13,10 @@ import java.util.List;
 public interface UserSearchContract {
     interface View {
         void showData(List<HistoryModel> list);
-        void addUser(HistoryModel model);
         void showProgressBar();
         void hideProgressBar();
         void chatClicked(HistoryModel model);
         void changeStatus(String status);
-        void setMessage(String message);
     }
 
     interface Presenter {
@@ -30,15 +28,11 @@ public interface UserSearchContract {
         WifiP2pManager.ConnectionInfoListener getConnectionInfoListener();
         void chatClicked(HistoryModel model);
         void stopDiscovery();
-        boolean isPaused();
         void setupDiscover();
-        boolean isConnected();
-        void setConnected(boolean connected);
         void onResume();
         void onPause();
         void onStop();
         void onDestroy();
         void setConnectedDevice(WifiP2pDevice device);
-        void onMessageSend();
     }
 }

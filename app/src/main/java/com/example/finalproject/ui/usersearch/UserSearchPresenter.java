@@ -28,8 +28,10 @@ import com.example.finalproject.data.Database;
 import com.example.finalproject.data.models.HistoryModelEntity;
 import com.example.finalproject.data.models.MessageModelEntity;
 import com.example.finalproject.ui.MainActivity;
+import com.example.finalproject.ui.SocketHandler;
 import com.example.finalproject.ui.messages.MessageContract;
 import com.example.finalproject.ui.messages.MessageFragment;
+import com.example.finalproject.ui.messages.MessagePresenter;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.example.finalproject.ui.models.MessageModel;
 
@@ -50,7 +52,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     private UserSearchContract.View view;
     private Context context;
-    private boolean isPaused;
     private boolean isConnected;
 
     private WifiP2pManager wifiP2pManager;
@@ -67,14 +68,9 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     boolean reconnecting;
 
-    ServerClass serverClass;
-    ClientClass clientClass;
-    SendReceive sendReceive;
-
     public UserSearchPresenter(UserSearchContract.View view, Context context) {
         this.view = view;
         this.context = context;
-        this.isPaused = false;
         this.isConnected = false;
         this.clickedModel = null;
         this.connectedDevice = null;
@@ -87,8 +83,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     @SuppressLint("StaticFieldLeak")
     @Override
     public void searchUsers() {
-        view.showProgressBar();
-        setupDiscover();
+
     }
 
     private void setupBroadcastReceiver() {
@@ -174,48 +169,29 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
 
     @Override
     public void onResume() {
-        isPaused = false;
         registerReceiver();
+        view.showProgressBar();
+        setupDiscover();
     }
 
     @Override
     public void onPause() {
         unregisterReceiver();
-        isPaused = true;
         stopDiscovery();
-
-        disconnect();
     }
 
     @Override
     public void onStop() {
-        int x = 5;
+
     }
 
-
-    @Override
-    public boolean isPaused() {
-        return this.isPaused;
-    }
 
     @Override
     public void onDestroy() {
         unregisterReceiver();
-        isPaused = true;
         stopDiscovery();
 
         disconnect();
-
-
-    }
-
-    private void closeSocket() {
-        if (serverClass == null || serverClass.socket == null) return;
-        try {
-            serverClass.socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void disconnect() {
@@ -234,8 +210,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         cancelConnect();
 
         deleteGroups();
-
-        closeSocket();
     }
 
     private void deleteGroups() {
@@ -255,16 +229,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void setConnected(boolean connected) {
-        this.isConnected = connected;
-    }
-
-    @Override
-    public boolean isConnected() {
-        return this.isConnected;
     }
 
     @Override
@@ -359,13 +323,42 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 // Host
                 view.changeStatus("Host");
-                serverClass = new ServerClass();
-                serverClass.start();
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            ServerSocket serverSocket = new ServerSocket(SocketHandler.getPort());
+
+                            Socket socket = serverSocket.accept();
+                            SocketHandler.setSocket(socket);
+
+                            gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
+
             } else if (wifiP2pInfo.groupFormed) {
                 // Client
                 view.changeStatus("Client");
-                clientClass = new ClientClass(groupOwnerAddress);
-                clientClass.start();
+
+                (new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            Socket socket = new Socket();
+                            SocketHandler.setSocket(socket);
+                            socket.connect(new InetSocketAddress(groupOwnerAddress, SocketHandler.getPort()), 500);
+
+                            gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
         }
     };
@@ -380,17 +373,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         navController.navigate(R.id.action_findUserFragment_to_messageFragment, args);
     }
 
-    private int counter = 1;
-
-    @Override
-    public void onMessageSend() {
-        if (sendReceive == null) return;
-        Toast.makeText(context, "Sending message " + counter, Toast.LENGTH_SHORT).show();
-
-        String msg = "test message" + (counter++);
-        sendReceive.write(msg.getBytes());
-    }
-
     @Override
     public WifiP2pManager.ConnectionInfoListener getConnectionInfoListener() {
         return this.connectionInfoListener;
@@ -399,131 +381,5 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     private HistoryModelEntity FromModelToEntity(HistoryModel model) {
         return new HistoryModelEntity(model.getName(), Helper.fromDate(model.getLastMessageDate()), model.getMessageCount());
     }
-
-    static final int MESSAGE_READ = 1;
-
-
-    public class ServerClass extends Thread {
-        Socket socket;
-        ServerSocket serverSocket;
-
-        @Override
-        public void run() {
-            try {
-                serverSocket = new ServerSocket(7878);
-                socket = serverSocket.accept();
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-
-                HistoryModel partner = clickedModel;
-                if (partner == null) partner = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-
-                gotoChat(partner);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message message) {
-            switch (message.what) {
-                case MESSAGE_READ:
-                    byte[] readBuff = (byte[]) message.obj;
-                    String tempMsg = new String(readBuff, 0, message.arg1);
-                    // msg in tempmsg
-                    view.setMessage(tempMsg);
-                    break;
-            }
-            return true;
-        }
-    });
-
-    private class SendReceive extends Thread {
-        private Socket socket;
-        private InputStream inputStream;
-        private OutputStream outputStream;
-
-        public SendReceive(Socket skt) {
-            socket = skt;
-            try {
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void run() {
-            byte[] buffer = new byte[1024];
-            int bytes;
-
-            while (socket != null) {
-                try {
-                    bytes = inputStream.read(buffer);
-                    if (bytes > 0) {
-                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public void write(byte[] bytes) {
-            try {
-                new SendMessageThread().execute(bytes);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        private class SendMessageThread extends AsyncTask<byte[], Void, Void> {
-
-            @Override
-            protected Void doInBackground(byte[]... bytesArr) {
-                try {
-                    outputStream.write(bytesArr[0]);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        }
-    }
-
-    public class ClientClass extends Thread {
-        Socket socket;
-        String hostAdd;
-
-        public ClientClass(InetAddress hostAddress) {
-            hostAdd = hostAddress.getHostAddress();
-            socket = new Socket();
-        }
-
-        @Override
-        public void run() {
-            try {
-                socket.connect(new InetSocketAddress(hostAdd, 7878), 500);
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-
-                if (clickedModel == null && connectedDevice == null) {
-                    Toast.makeText(context, "Device not found", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                HistoryModel partner = clickedModel;
-                if (partner == null) partner = new HistoryModel(connectedDevice.deviceName, connectedDevice);
-
-                gotoChat(partner);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
 
 }
