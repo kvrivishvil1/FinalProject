@@ -105,6 +105,17 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             }
         });
 
+        messageText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b) {
+                    recyclerView.smoothScrollToPosition(adapter.getItemCount() == 0 ? 0 : adapter.getItemCount() - 1);
+                } else {
+
+                }
+            }
+        });
+
         model = (HistoryModel) bundle.getSerializable("HistoryModel");
         if(model == null) {
             model = (HistoryModel) bundle.getSerializable("NewHistoryModel");
@@ -192,7 +203,8 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     @Override
     public void showData(List<MessageModel> list) {
         this.adapter.setItems(list);
-        recyclerView.scrollToPosition(list.size() - 1);
+        if(list.size() > 0)
+            recyclerView.smoothScrollToPosition(list.size() == 0 ? 0 : list.size() - 1);
     }
 
 }

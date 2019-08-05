@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#d6e4ef"
+    android:windowSoftInputMode="stateVisible|adjustResize"
     tools:context=".ui.history.HistoryFragment">
 
     <androidx.recyclerview.widget.RecyclerView

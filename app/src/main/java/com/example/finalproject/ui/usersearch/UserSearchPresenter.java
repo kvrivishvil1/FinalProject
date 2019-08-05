@@ -340,8 +340,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     public void run() {
                         try {
                             ServerSocket serverSocket = new ServerSocket(SocketHandler.getPort());
-
                             Socket socket = serverSocket.accept();
+                            socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
 
                             gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
@@ -359,12 +359,14 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     public void run() {
                         try {
                             Socket socket = new Socket();
+                            socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
 
                             Date startDate = new Date();
                             while (true) {
                                 try {
                                     socket.connect(new InetSocketAddress(groupOwnerAddress, SocketHandler.getPort()), 10000);
+                                    gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
                                     break;
                                 } catch (Exception e) {
                                     Thread.sleep(1000);
@@ -373,9 +375,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                                         break;
                                 }
                             }
-
-
-                            gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
