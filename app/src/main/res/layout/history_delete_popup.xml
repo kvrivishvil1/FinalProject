@@ -20,7 +20,7 @@
         android:id="@+id/history_delete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/clear_history_button_shape"
+        android:background="@drawable/round_button_shape"
         android:text="Button"
         tools:layout_editor_absoluteX="61dp"
         tools:layout_editor_absoluteY="90dp" />

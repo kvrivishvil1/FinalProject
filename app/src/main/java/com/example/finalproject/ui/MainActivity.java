@@ -1,44 +1,24 @@
 package com.example.finalproject.ui;
 
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
-import com.example.finalproject.GpsUtils;
+import com.example.finalproject.Helper;
 import com.example.finalproject.R;
-import com.example.finalproject.WifiDirectBroadcastReceiver;
 import com.google.android.material.navigation.NavigationView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     NavigationView navigation;
     Toolbar toolbar;
     ActionBarDrawerToggle toggle;
+    ConstraintLayout permissionsOverlay;
+    Button retryPermissions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +36,14 @@ public class MainActivity extends AppCompatActivity {
 
         drawer = findViewById(R.id.drawer_layout);
         toolbar = findViewById(R.id.toolbar);
+        permissionsOverlay = findViewById(R.id.require_permissions);
+        permissionsOverlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+        retryPermissions = findViewById(R.id.retry_permissions);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -68,16 +58,14 @@ public class MainActivity extends AppCompatActivity {
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 //        toggle.setDrawerIndicatorEnabled(false);
-        requirePermissions();
-
         navigation = findViewById(R.id.navigation);
         final AppCompatActivity activity = this;
-
-        NavController navController = Navigation.findNavController(activity, R.id.main_fragment);
 
         navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                if (!allPermissionsSatisfied()) return true;
+
                 NavController navController = Navigation.findNavController(activity, R.id.main_fragment);
 
                 int menuItemId = menuItem.getItemId();
@@ -119,44 +107,56 @@ public class MainActivity extends AppCompatActivity {
 //                navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
             }
         });
+
+        retryPermissions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requirePermissions();
+            }
+        });
+
+        requirePermissions();
+    }
+
+    private boolean isWifiOn = false;
+    private boolean isGPSOn = false;
+
+    private boolean allPermissionsSatisfied() {
+        return isGPSOn && isWifiOn;
+    }
+
+    private void checkStart() {
+        if (allPermissionsSatisfied()) {
+            permissionsOverlay.setVisibility(View.GONE);
+        }
     }
 
     private void requirePermissions() {
 
-        final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (!wifiManager.isWifiEnabled()) {
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            alertDialogBuilder
-                    .setCancelable(false)
-                    .setMessage("აპლიკაციის მუშაობისთვის აუცილებელია WiFi. გსურთ ჩართვა?")
-                    .setPositiveButton("კი",
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    wifiManager.setWifiEnabled(true);
-                                    dialogInterface.dismiss();
-                                }
-                            })
-                    .setNegativeButton("არა",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialogInterface,int id) {
-                                    dialogInterface.cancel();
-                                }
-                            });
-            AlertDialog alertDialog = alertDialogBuilder.create();
-            alertDialog.show();
-        }
+        Helper.turnWifiOn(this, new Helper.PermissionListener() {
+            @Override
+            public void onSuccess() {
+                isWifiOn = true;
+                checkStart();
+            }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-            new GpsUtils(this).turnGPSOn(new GpsUtils.onGpsListener() {
-                @Override
-                public void gpsStatus(boolean isGPSEnable) {
+            @Override
+            public void onFailure() {
+                isWifiOn = false;
+            }
+        });
+        Helper.turnGpsOn(this, new Helper.PermissionListener() {
+            @Override
+            public void onSuccess() {
+                isGPSOn = true;
+                checkStart();
+            }
 
-                }
-            });
-        }
+            @Override
+            public void onFailure() {
+                isGPSOn = false;
+            }
+        });
     }
 
     public Toolbar getToolbar() {
