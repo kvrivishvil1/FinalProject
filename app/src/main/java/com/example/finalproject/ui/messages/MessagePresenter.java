@@ -2,7 +2,9 @@ package com.example.finalproject.ui.messages;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
@@ -144,6 +146,7 @@ public class MessagePresenter implements MessageContract.Presenter {
 
                         NavController navController = Navigation.findNavController((Activity) context, R.id.main_fragment);
                         navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
+                        Helper.closeKeyboard((Activity) context);
                         break;
                     }
                     newMessage(tempMsg, false);
