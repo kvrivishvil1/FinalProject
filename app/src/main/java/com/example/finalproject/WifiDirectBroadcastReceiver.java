@@ -32,9 +32,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
             if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-//                Toast.makeText(context, "Wifi is ON", Toast.LENGTH_SHORT).show();
             } else {
-//                Toast.makeText(context, "Wifi is OFF", Toast.LENGTH_SHORT).show();
             }
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             if (manager != null) {
@@ -62,10 +60,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         } else if (WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals(action)) {
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_DISCOVERY_STATE, 10000);
             if (state == WifiP2pManager.WIFI_P2P_DISCOVERY_STARTED) {
-//                Toast.makeText(context, "---------Discovery started", Toast.LENGTH_SHORT).show();
                 presenter.setDiscovery(true);
             } else {
-//                Toast.makeText(context, "+++++++++Discovery stopped", Toast.LENGTH_SHORT).show();
                 presenter.setDiscovery(false);
             }
         }
