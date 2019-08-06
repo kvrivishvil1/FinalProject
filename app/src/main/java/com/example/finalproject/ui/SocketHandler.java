@@ -90,4 +90,12 @@ public class SocketHandler {
             e.printStackTrace();
         }
     }
+
+    public static int read(byte[] buffer) {
+        try {
+            return socket.getInputStream().read(buffer);
+        } catch (IOException e) {
+            return -999;
+        }
+    }
 }

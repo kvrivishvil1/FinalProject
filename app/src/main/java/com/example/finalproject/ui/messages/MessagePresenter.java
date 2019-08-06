@@ -3,6 +3,7 @@ package com.example.finalproject.ui.messages;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
@@ -20,6 +21,7 @@ import com.example.finalproject.data.DataDao;
 import com.example.finalproject.data.Database;
 import com.example.finalproject.data.models.HistoryModelEntity;
 import com.example.finalproject.data.models.MessageModelEntity;
+import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.SocketHandler;
 import com.example.finalproject.ui.models.HistoryModel;
 import com.example.finalproject.ui.models.MessageModel;
@@ -149,7 +151,7 @@ public class MessagePresenter implements MessageContract.Presenter {
 
                         NavController navController = Navigation.findNavController((Activity) context, R.id.main_fragment);
                         navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
-                        break;
+                        return true;
                     }
                     newMessage(tempMsg, false);
                     break;
@@ -169,11 +171,12 @@ public class MessagePresenter implements MessageContract.Presenter {
 
             while (SocketHandler.getSocket() != null && !SocketHandler.getSocket().isClosed()) {
                 try {
-                    bytes = SocketHandler.getSocket().getInputStream().read(buffer);
+                    bytes = SocketHandler.read(buffer);
+                    if (bytes == -999) break;
                     if (bytes > 0) {
                         handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
