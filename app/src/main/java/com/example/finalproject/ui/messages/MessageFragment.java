@@ -221,8 +221,8 @@ public class MessageFragment extends Fragment implements MessageContract.View {
 
     @Override
     public void onStop() {
-        super.onStop();
         presenter.onStop();
+        super.onStop();
     }
 
     @Override
