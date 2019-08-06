@@ -1,7 +1,5 @@
 package com.example.finalproject.ui.usersearch;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -10,14 +8,9 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
@@ -26,18 +19,11 @@ import com.example.finalproject.R;
 import com.example.finalproject.WifiDirectBroadcastReceiver;
 import com.example.finalproject.data.Database;
 import com.example.finalproject.data.models.HistoryModelEntity;
-import com.example.finalproject.data.models.MessageModelEntity;
 import com.example.finalproject.ui.MainActivity;
 import com.example.finalproject.ui.SocketHandler;
-import com.example.finalproject.ui.messages.MessageContract;
-import com.example.finalproject.ui.messages.MessageFragment;
-import com.example.finalproject.ui.messages.MessagePresenter;
 import com.example.finalproject.ui.models.HistoryModel;
-import com.example.finalproject.ui.models.MessageModel;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -351,6 +337,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                             socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
 
+                            status = Status.CONNECTED;
+
                             gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -378,6 +366,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                             while (true) {
                                 try {
                                     socket.connect(new InetSocketAddress(groupOwnerAddress, SocketHandler.getPort()), 10000);
+                                    status = Status.CONNECTED;
+
                                     gotoChat(new HistoryModel(connectedDevice.deviceName, connectedDevice));
                                     break;
                                 } catch (Exception e) {
