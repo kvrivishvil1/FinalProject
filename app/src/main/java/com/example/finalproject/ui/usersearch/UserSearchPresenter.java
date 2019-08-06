@@ -43,6 +43,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
 
+    private static final int CONNECTING_TIMEOUT = 15000;
+
     enum Status {
         NOT_CONNECTED,
         CONNECTING,
@@ -261,6 +263,7 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         @Override
         public void onSuccess() {
 //            Toast.makeText(context.getApplicationContext(), "Connected to " + clickedModel.getDevice().deviceName, Toast.LENGTH_SHORT).show();
+            startCancelTimeout();
         }
 
         @Override
@@ -316,6 +319,30 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
         wifiP2pManager.connect(channel, config, connectListener);
     }
 
+    private void startCancelTimeout() {
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    sleep(CONNECTING_TIMEOUT);
+                    if (status != Status.CONNECTED) {
+                        NavController navController = Navigation.findNavController((MainActivity) context, R.id.main_fragment);
+                        navController.navigate(R.id.action_findUserFragment_to_historyFragment);
+                        ((MainActivity) context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context.getApplicationContext(), "ვერ მოხერხდა მოწყობილობასთან დაკავშირება", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }.start();
+    }
+
     private WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
@@ -333,9 +360,8 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     public void run() {
                         try {
                             ServerSocket serverSocket = new ServerSocket(SocketHandler.getPort());
-                            serverSocket.setReuseAddress(true);
+                            SocketHandler.setServerSocket(serverSocket);
                             Socket socket = serverSocket.accept();
-                            socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
 
                             status = Status.CONNECTED;
@@ -360,7 +386,6 @@ public class UserSearchPresenter implements UserSearchContract.Presenter {
                     public void run() {
                         try {
                             Socket socket = new Socket();
-                            socket.setReuseAddress(true);
                             SocketHandler.setSocket(socket);
 
                             Date startDate = new Date();

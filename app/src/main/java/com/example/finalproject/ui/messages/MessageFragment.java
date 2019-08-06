@@ -207,4 +207,28 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             recyclerView.smoothScrollToPosition(list.size() == 0 ? 0 : list.size() - 1);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        presenter.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        presenter.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        presenter.onDestroy();
+    }
+
 }

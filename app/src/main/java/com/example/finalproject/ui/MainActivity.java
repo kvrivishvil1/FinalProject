@@ -145,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 isWifiOn = false;
             }
         });
+
         Helper.turnGpsOn(this, new Helper.PermissionListener() {
             @Override
             public void onSuccess() {

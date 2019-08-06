@@ -55,7 +55,7 @@ public class MessagePresenter implements MessageContract.Presenter {
         this.isHistory = isHistory;
 
         if (!isHistory) {
-            sendReceive = new SendReceive(SocketHandler.getSocket());
+            sendReceive = new SendReceive();
             sendReceive.start();
         }
     }
@@ -103,7 +103,7 @@ public class MessagePresenter implements MessageContract.Presenter {
 
     @Override
     public void sendMessage(String msg) {
-        sendReceive.write(msg.getBytes());
+        SocketHandler.write(msg);
         newMessage(msg, true);
     }
 
@@ -144,9 +144,11 @@ public class MessagePresenter implements MessageContract.Presenter {
                     if (tempMsg.equals(SocketHandler.getStopWord())) {
                         Toast.makeText(context, "კავშირი მოწყობილობასთან გაწყვეტილია", Toast.LENGTH_LONG).show();
 
+                        SocketHandler.closeSocket();
+                        Helper.closeKeyboard((Activity) context);
+
                         NavController navController = Navigation.findNavController((Activity) context, R.id.main_fragment);
                         navController.navigate(R.id.action_messageFragment_to_historyFragment, null);
-                        Helper.closeKeyboard((Activity) context);
                         break;
                     }
                     newMessage(tempMsg, false);
@@ -157,18 +159,7 @@ public class MessagePresenter implements MessageContract.Presenter {
     });
 
     public class SendReceive extends Thread {
-        private Socket socket;
-        private InputStream inputStream;
-        private OutputStream outputStream;
-
-        public SendReceive(Socket skt) {
-            socket = skt;
-            try {
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        public SendReceive() {
         }
 
         @Override
@@ -176,9 +167,9 @@ public class MessagePresenter implements MessageContract.Presenter {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            while (socket != null) {
+            while (SocketHandler.getSocket() != null && !SocketHandler.getSocket().isClosed()) {
                 try {
-                    bytes = inputStream.read(buffer);
+                    bytes = SocketHandler.getSocket().getInputStream().read(buffer);
                     if (bytes > 0) {
                         handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                     }
@@ -187,23 +178,24 @@ public class MessagePresenter implements MessageContract.Presenter {
                 }
             }
         }
+    }
 
-        public void write(final byte[] bytes) {
-            try {
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            outputStream.write(bytes);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+    @Override
+    public void onResume() {
+    }
+
+    @Override
+    public void onPause() {
+    }
+
+    @Override
+    public void onStop() {
+        SocketHandler.stopSocket();
+    }
+
+    @Override
+    public void onDestroy() {
+        SocketHandler.stopSocket();
     }
 
 }

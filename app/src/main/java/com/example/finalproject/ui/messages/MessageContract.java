@@ -17,6 +17,10 @@ public interface MessageContract {
         void loadMessages(long userId);
         void deleteHistory(long id);
         void sendMessage(String msg);
+        void onResume();
+        void onPause();
+        void onStop();
+        void onDestroy();
     }
 
 }
